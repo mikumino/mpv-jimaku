@@ -6,6 +6,9 @@ var API_KEY = 'YOUR_API_KEY_GOES_HERE';
 // Filter the response to only have the specified episode
 var PROMPT_EPISODE = true;
 
+// Rename subtitles to the video file name
+var RENAME_SUBTITLES = false;
+
 // Keybindings
 var MANUAL_SEARCH_KEY = 'g';
 var FILENAME_AUTO_SEARCH_KEY = 'h';
@@ -34,8 +37,23 @@ function api(url, extraArgs) {
   if (res.stdout) return JSON.parse(res.stdout);
 }
 
+function getVideoFileName() {
+  var filename = mp.get_property('filename');
+  return filename.replace(/\.[^/.]+$/, "");
+}
+  
 function downloadSub(sub) {
-  return api(sub.url, ['--output', sub.name]);
+  if (RENAME_SUBTITLES) {
+    var videoFileName = getVideoFileName();
+    var subExtension = sub.name.split('.').pop();
+    var newSubName = videoFileName + '.' + subExtension;
+    var res = api(sub.url, ['--output', newSubName]);
+    sub.name = newSubName;
+
+    return res;
+  } else {
+    return api(sub.url, ['--output', sub.name]);
+  }
 }
 
 function showMessage(message, persist) {
